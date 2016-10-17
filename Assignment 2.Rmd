@@ -1,0 +1,434 @@
+---
+title: "Assignment 2_Zhu Mao"
+author: "ZHU MAO"
+date: "October 5, 2016"
+output: word_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Part 1. Generate uniformly distributed random numbers
+1.1 Use runif()
+```{r}
+set.seed(15)    
+Sample <- runif(1000,0,1)   # Simulate 1000 pseudo-random numbers uniformly distributed on [0,1]. 
+```
+
+
+1.2 Simulate Uniform Random Sample on [0,1] Using Random.org 
+```{r}
+library(random)  # Install the "random" package and pull into R
+nFlips <- 1000   # Set up the number of random flips
+dataFromRandom <- randomNumbers(n = nFlips, min = 0, max = 1,  col = 1, base = 2, check = TRUE)  # Use randomNumbers function from "random" package to simulate the numbers 
+head(dataFromRandom)
+```
+
+
+Turn sequence of zeros and ones of length n into decimal form. 
+```{r}
+suppressMessages(library(compositions))
+bin2dec <- function(Bin.Seq) {
+    unbinary(paste(Bin.Seq, collapse = ""))
+}
+bin2dec(c(1,1,1,1,1,0))
+```
+
+Turn sequence of zeros and ones dataFromRandom of length 1000 into a matrix with 10 columns and 100 rows
+```{r}
+Binary.matrix <- matrix(dataFromRandom, ncol = 10)
+head(Binary.matrix)
+```
+
+Transform each row of the matrix into decimal format and divide the numbers by 2^10 to make real numbers in [0,1]. 
+```{r}
+Decimal.Sample <- apply(Binary.matrix,1,bin2dec)/2^10
+Decimal.Sample
+```
+
+Part 2. Test random number generator 
+2.1 Test uniformity of distribution of both random number generators 
+2.1.1. Sample obtained by runif()
+Analyze what was simulated by first looking at the histogram. 
+```{r}
+Sample.histogram <- hist(Sample)
+Sample.histogram
+```
+Although there is a little deviations among the Samples, but generally speaking the distribution is fairly close in height in the frequency and mostly flat. But telling from the counts and density, there is no much difference, the densities are all close to 1, which indicates that the simulation is pretty good. 
+
+Estimate mean and standard deviation: 
+```{r}
+(Sample.histogram.mean <- mean(Sample.histogram$density))
+(Sample.histogram.sd <- sd(Sample.histogram$density)) 
+
+plot(Sample.histogram, freq = FALSE)
+abline(h = Sample.histogram.mean)
+abline(h = Sample.histogram.mean + 1.96*Sample.histogram.sd, col = "red", lty = 2)
+abline(h = Sample.histogram.mean - 1.96*Sample.histogram.sd, col = "red", lty = 2)
+```
+The mean of the density is 1, the distribution is very flat and uniform, and from the histogram we could see that all the values generated are within one standard deviation from the mean. There variance is small among numbers.  
+
+```{r}
+(Sample.mean <- mean(Sample))
+(Sample.variance <- var(Sample))
+```
+The sample mean of 1000 numbers generated is 0.52, which is very close to 0.5, with little variance.  
+
+```{r}
+summary(Sample)
+```
+From the summary values, 20th, 50th, and 75th quantiles  of the Sample generated we could see that the distribution is very close to uniform distribution, and the simulation is very good.
+
+What do you think is the best way to estimating uniform distribution over unknown interval? 
+Plot the histogram to take a look at the density distribution, and see whether it is uniform and flat with little deviations from the mean. Also by calculating the 25th, 50th, 75th quantitle gives more information of the distribution. Calculating the mean and variance of all the random numbers generated does not necessarily give a full picture of the distribution. 
+
+
+2.12 
+Analyze what was simulated by first looking at the histogram. 
+```{r}
+RandomSample.histogram <- hist(Decimal.Sample)
+RandomSample.histogram
+```
+From the histogram of the Decimal Sample we could see that the distribution varied more and is less uniform than the distribution of random samples created by runif().It sees there are more numbers generated smaller than 0.5 than numbers larger than 0.5 because the count and density after 0.5 is relatively low.   
+
+
+Estimate mean and standard deviation: 
+```{r}
+(RandomSample.histogram.mean <- mean(RandomSample.histogram$density))
+(RandomSample.histogram.sd <- sd(RandomSample.histogram$density))
+
+plot(RandomSample.histogram, freq = FALSE) 
+abline(h = RandomSample.histogram.mean) 
+abline(h = RandomSample.histogram.mean + 1.96*RandomSample.histogram.sd, col = "red", lty = 2)
+abline(h = RandomSample.histogram.mean - 1.96*RandomSample.histogram.sd, col = "red", lty = 2) 
+```
+The mean of the density is 1, but the standard deviation is more than the density standard deviation from the runif() both by telling from the density histogram and the calculation results. Although there are some deviations, but all the numbers generated are still within one standard deviations of the density distribution. 
+
+```{r}
+(RandomSample.mean <- mean(Decimal.Sample))
+(RandomSample.variance <- var(Decimal.Sample))
+```
+The sample mean of 1000 numbers generated is 0.48, which is very close to 0.5, and variance is relatively small too. 
+
+```{r}
+summary(Decimal.Sample)
+```
+By telling from the summary we could see that mean is larger than median, and the 75th quantitile is at 68%, and it seems the distribution is not so uniform with relatively more nuumbers generated under 0.5. 
+
+2.2 Test Independence of the sequence of zeros and ones 
+2.2.1 Turning point test 
+```{r}
+library(randtests)
+turning.point.test(Decimal.Sample)
+```
+Since the null hypothesis is randomness (i.i.d), the alternative hypothesis is non randomness, and by telling the result, p-value is 0.75 > 0.05, so that we could not reject null hypothesis.
+
+
+2.3 Test frequency by Monobit test: 
+```{r}
+dataFromRandom.plusminus1<-(dataFromRandom-.5)*2  #Transfer the data to values from -1 to 1
+erf <- function(x) 2 * pnorm(x * sqrt(2)) - 1
+erfc <- function(x) 2 * pnorm(x * sqrt(2), lower = FALSE)  # Define erfc in R
+plot(seq(from=-3,to=3,by=.05),erfc(seq(from=-3,to=3,by=.05)),type="l",xlab="x",ylab="erfc(x)")
+#Plot efrc()
+
+erfc(abs(sum(dataFromRandom.plusminus1)/sqrt(2*nFlips)))
+# Check the value erfc(S).If the P-value or erfc(S) is less or equal than 0.01 the sequence fails the test.
+```
+The test shows that the P-value is 0.2059032 and is larger than 0.01, which means our sequence passes the test. 
+
+```{r}
+plot(erfc(abs(apply(matrix(dataFromRandom.plusminus1,ncol=50),1,sum))/sqrt(2*50)),ylab="P-values of 20 runs")
+#Check each of the sub-sequences created earlier.
+
+sum(erfc(abs(apply(matrix(dataFromRandom.plusminus1,ncol=50),1,sum))/sqrt(2*50))<=.01)
+# Check how many runs out of 20 fail the test 
+```
+From the result we could see that all the 20 sub-sequences passes the test. 
+
+
+Part3. Invent a random number generator
+
+1. I would like to invent the random number generator based on the throwing dice process. 
+First, When we are throwing a dice, then the number facing upside could be 1-6 with equal probabilities. So first of all I would like to generate numbers from 1 to 6 by using the random package in R.  
+Secondly, if the results are c(1,2,3), then I will assign it to 0, if the results are c(4,5,6), I will assign it to 1. 
+Finally, I will transfer all the numbers to [0,1] by applying the same way in the previous problem.   
+
+2. The detailed sequences are as follows: 
+```{r}
+#Step 1
+library(random)
+nThrows <- 1000    #1000 times dice throw 
+dataFromRandom2 <- randomNumbers(n = nThrows, min = 1, max = 6,  col = 1, base = 2, check = TRUE)    #Generate numbers from 1 to 6 
+
+#Transfer the numeric value to character values in order to turn binary values to decimal values 
+
+NumtoChar <- function(x) {
+    as.character(x)
+}
+
+dataFromRandom2 <- apply(dataFromRandom2, 1, NumtoChar) 
+dataFromRandom3 <- unbinary(dataFromRandom2)  #Transfer binary values to decimal values 
+dataFromRandom3 <- matrix(dataFromRandom3, ncol = 10) 
+# dim(dataFromRandom3)  # 100*10 Matrix 
+
+#Step2, if with result c(1,2,3), then assign to 0, with result c(4,5,6), then assign to 1
+Transform <- function(x) {
+    if(x >= 1 & x <= 3){
+        x <- 0}
+    else {x <- 1}
+}
+
+dataFromRandom3 <- apply(dataFromRandom3, c(1,2), Transform)
+# dim(dataFromRandom3)   #100*10 Matrix
+
+# Step 3, transfer all numbers to [0,1]
+bin2dec <- function (Bin.Seq) {
+    unbinary(paste(Bin.Seq, collapse = ''))
+}
+
+NewSample <- apply(dataFromRandom3, 1, bin2dec)/2^10
+```
+
+So the new random sample would be: 
+```{r}
+NewSample
+
+```
+
+
+3. Results of the uniformity test 
+Method 1: 
+```{r}
+NewSample.histogram <- hist(NewSample)
+NewSample.histogram
+(NewSample.histogram.mean <- mean(NewSample.histogram$density))
+
+(NewSample.histogram.sd <- sd(NewSample.histogram$density))
+
+plot(NewSample.histogram, freq = FALSE) 
+abline(h=NewSample.histogram.mean)
+abline(h=NewSample.histogram.mean + 1.96*NewSample.histogram.sd, col = "red", lty = 2)
+abline(h=NewSample.histogram.mean - 1.96*NewSample.histogram.sd, col = "red", lty = 2)
+
+(NewSample.mean <- mean(NewSample))
+(NewSample.variance <- var(NewSample)) 
+
+summary(NewSample) 
+```
+(1)From the histogram of NewSample we could see that there are some deviations in the density distribution of the random numbers. 
+(2) The standard deviation for the density is a little large, which is 0.27, larger than the first generator (0.08) and the decimal sample (0.16).   
+(3)By the histogram we could see that the standard diviations are a little large, but all the numbers are within one standard deviation from the mean.  
+(4) From the mean and the variance of the random numbers we could see that the mean is very close to 0.5, with little variance. And also the 25th, 50th and 75th quantitle are very close to uniform distribution. The simulation is generally good.
+
+
+4. Results of the frequency test 
+```{r}
+dataFromRandom4 <- as.numeric(dataFromRandom3)
+dataFromRandom4.plus1minums1 <- (dataFromRandom4 - 0.5)*2
+erfc(abs(sum(dataFromRandom4.plus1minums1)/sqrt(2*nThrows)))
+```
+The erfc is larger than 0.01, so the randomization passes the test. 
+
+
+5. Results of the turning point test 
+```{r}
+library(randtests) 
+turning.point.test(NewSample) 
+```
+Since p-value is 0.7496, so that we don't reject the randomness. 
+
+Method 2: 
+1. First, generate x based on normal distribution with mu = 0, and sigma = 1 in R. 
+Second, calculate the cumulative distribution of the normal distribution, then uniform distribution random numbers within [0,1] are generated. 
+
+2. 
+```{r}
+x <- rnorm(1000,mean = 0, sd = 1)
+a <- pnorm(x)
+```
+
+3. Uniformity test 
+```{r}
+a.histogram <- hist(a)
+a.histogram
+
+(a.histogram.mean <- mean(a.histogram$density))
+(a.histogram.sd <- sd(a.histogram$density))
+
+plot(a.histogram, freq = FALSE) 
+abline(h=a.histogram.mean)
+abline(h=a.histogram.mean + 1.96*a.histogram.sd, col = "red", lty = 2)
+abline(h=a.histogram.mean - 1.96*a.histogram.sd, col = "red", lty = 2)
+
+(a.mean <- mean(a))
+(a.variance <- var(a)) 
+
+summary(a) 
+```
+The generation is pretty good. The distribution has some variances, but generally flat, there is no much difference among the densities. The variance is small. 
+The mean of all the random numbers is close to 0.5, the variance is low. And the 25th, 50th and 75th quantitile is distributed uniformally. It's a pretty good generation. 
+
+
+4. Frequency test
+```{r}
+#First transform the numbers into bits, not sure how to do that, and not sure whether I am doing in the right way, looking into more guidance and insights, but just put my thoughts here. 
+
+b <- matrix(a, ncol = 10)
+
+Transform <- function(x) {
+    if (x <= 0.5) {
+        x <- 0
+    } else {
+        x <- 1
+    }
+}
+
+
+b <- apply(b, c(1,2), Transform)
+dim(b)
+
+
+b <- as.numeric(b)
+b.plus1minus1 <- (b - 0.5) * 2
+
+
+erfc <- function(x) 2 * pnorm(x * sqrt(2), lower = FALSE) 
+erfc(abs(sum(b.plus1minus1)/sqrt(2*1000)))
+```
+The erfc is larger than 0.01, so the randomization passes the test. 
+
+
+5. Turning point test 
+```{r}
+library(randtests) 
+turning.point.test(a) 
+```
+Since p-value is 0.4233, so that we don't reject the randomness. 
+
+
+
+Part 4. Monte Carlo Method 
+
+4.1 Scratch off quote of the day: fuction download 
+```{r}
+datapath <- "C:/Users/AA/Desktop/Statistical Analysis Homework/"
+load(file = paste(datapath, 'documents_MScA Statistical Analysis 31007_MScA 31007 Lecture 2_ScratchOffMonteCarlo.rda', sep = '/'))
+```
+
+
+4.2 Simulate pseudo-random points [x,y] on [0,100] * [0,100]
+```{r}
+
+nSample1 <- 1000
+my.seed1 <- 938364
+set.seed(my.seed1)
+x1y1 <- runif(2*nSample1,0,100)
+x1y1 <- matrix(x1y1, ncol = 2)
+head(x1y1)
+ScratchOffMonteCarlo(x1y1)
+
+
+nSample2 <- 12000
+set.seed(my.seed1) 
+x2y2 <- runif(2*nSample2,0,100)
+x2y2 <- matrix(x2y2, ncol = 2) 
+head(x2y2) 
+ScratchOffMonteCarlo(x2y2) 
+
+
+nSample3 <- 12000
+my.seed2 <- 846503
+set.seed(my.seed2) 
+x3y3 <- runif(2*nSample3,0,100)
+x3y3 <- matrix(x2y2, ncol = 2) 
+head(x3y3) 
+ScratchOffMonteCarlo(x3y3) 
+
+nSample4 <- 12000
+my.seed3 <- 42908
+set.seed(my.seed3) 
+x4y4 <- runif(2*nSample4,0,100)
+x4y4 <- matrix(x4y4, ncol = 2) 
+head(x4y4) 
+ScratchOffMonteCarlo(x4y4)
+
+
+par(mfrow = c(2,2))
+ScratchOffMonteCarlo(x1y1) 
+ScratchOffMonteCarlo(x2y2) 
+ScratchOffMonteCarlo(x3y3)
+ScratchOffMonteCarlo(x4y4) 
+
+```
+
+After trying for several times, I found out that when n is 12000, and the open percentage is around 70% which enables the letters to be read clearly. And I changed the seed several times to get a clear picture of the part covered under the previous seed combinations. 
+
+
+4.3 Simulate quasi-random points [x,y] on [0,100] * [0,100] 
+```{r}
+library(randtoolbox)
+library(rngWELL)
+
+my.seed <- 10
+set.seed(my.seed)
+nSample <- 1000 
+xy <- sobol(nSample, dim = 2, init = T)*100 
+# plot(xy)
+ScratchOffMonteCarlo(xy)
+
+nSample2 <- 8000
+x1y1 <- sobol(nSample2, dim = 2, init = F) * 100 
+# plot(x1y1) 
+
+ScratchOffMonteCarlo(x1y1)
+```
+After tried for several times, it is good to read when the sample size is around 8000 with the open percentage 62.16%.  
+
+By comparing the two random number simulations, we found out that the second quasi-random points make the quote readable sooner with less samples. 
+
+For the first pseudo-random points method, with sample size 12000 and open percentage around 70% the letters are readable, and for the second quasi-random points method, with only 8000 samples and around open percentage 60% it is pretty clear. And for the quasi-random method, if we set the random size to 12000, which is the same with the first method, it gives better result than pseudo-random method with 80% open percentage, which makes the letters more clear. 
+Changing the number of samples and the seed plays the most important role. 
+The more the samples, the larger the open percentage, which enable the letters to become more clear. 
+The seed decides the way the blank is generated randomly. Sometimes it could cover the important part of the letter so that we need to set up another seed to regenerate in order to have some other ways of arrangement.  
+
+
+Part 5. Test 
+```{r}
+
+dataPath <- "C:/Users/AA/Desktop/Statistical Analysis Homework/"
+dat <- read.table(paste(dataPath, 'Week2_Test_Sample.csv', sep = "/"), header = TRUE)
+#dat$x[1]    #[1] -1.478783
+#dat$x[2]    #[1] 0.5643762
+#dat$x[3]    #[1] 1.42084
+#dat$x[4 : 504]
+
+
+datNorm <- qnorm(dat$x[4:504], mean = dat$x[1], sd = dat$x[2])
+
+
+datExp <- qexp(dat$x[4:504], rate = dat$x[3])
+
+res<-cbind(datNorm=datNorm,datExp=datExp)
+
+write.table(res, file = paste(dataPath,'result.csv',sep = '/'), row.names = F)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
