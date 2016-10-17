@@ -1,0 +1,201 @@
+---
+title: "Assignment1_Zhu Mao"
+author: "ZHU MAO"
+date: "September 30, 2016"
+output: html_document
+---
+Comparison of Correlations:
+
+case1.varianceX<-.1
+case1.varianceEps<-6
+case1.slopeA<-2
+case1.interceptB<-1
+case1.sampleX<-rnorm(500,mean=0,sd=sqrt(case1.varianceX))
+case1.sampleEps<-rnorm(500,mean=0,sd=sqrt(case1.varianceEps))
+case1.sampleY<-case1.slopeA*case1.sampleX+case1.interceptB+case1.sampleEps
+1. Read the data and Assign to Variable
+```{r}
+datapath <- "C:/Users/AA/Desktop/Statistical Analysis Homework/"  #Define the datapath
+Correlation.Data <- read.csv(file = paste(datapath, 'assignments_MScA Statistical Analysis 31007_MScA 31007 Lecture 1_Week1_Correlation_Comparison_Project_Data.csv', sep = '/'), header = TRUE, sep = ',') #Read the data into R
+Correlation.Data[1:10,] #Print the first 10 lines to see how it looks. 
+```
+
+
+2. Plot the simulated pairs of samples: 
+```{r}
+par(mfrow=c(2,2))  #Plot the 4 cases 
+with (Correlation.Data,{ 
+      plot(Case1.X,Case1.Y,ylim=c(-8,8))
+      plot(Case2.X,Case2.Y,ylim=c(-6,6))
+      plot(Case3.X,Case3.Y,ylim=c(-1,3))
+      plot(Case4.X,Case4.Y,ylim=c(0,2.5))
+})
+
+```
+
+3. Calculate sample correlations and determination coeffcients. 
+```{r} 
+with(Correlation.Data,{                          #Calculate the correlation coefficients for 4 cases, and bind it together to make comparisions
+    Correlation.Case1 <- cor(Case1.X,Case1.Y)
+    Correlation.Case2 <- cor(Case2.X,Case2.Y)
+    Correlation.Case3 <- cor(Case3.X,Case3.Y)
+    Correlation.Case4 <- cor(Case4.X,Case4.Y)
+    rbind(cbind(Correlation.Case1,Correlation.Case2,Correlation.Case3,Correlation.Case4), cbind(Correlation.Case1^2,Correlation.Case2^2,Correlation.Case3^2,Correlation.Case4^2))
+})
+
+```
+Conclustion: The correlation in Case 4 is the strongest because of the largest correlation coefficient, which is 0.4168832. 
+
+
+
+
+Test. Relationsihp between slope and correlation
+
+1. Download the data, unpack and read it: 
+
+```{r}
+dataPath <- "C:/Users/AA/Desktop/Statistical Analysis Homework/"  #Define datapath
+df <- read.table(paste0(dataPath, 'sample.csv'), header=TRUE)  #Read data into R
+head(df)
+attach(df)
+names(df)
+```
+
+2. Calculate X and Y standard deviations, correlation between X and Y and estimate a: 
+
+```{r}
+sdX <- sd(x)     #Standard deviation of X
+sdY <- sd(y)     #Standard deviation of Y
+cXY <- cor(x,y)  #Correlation coefficient of X,Y
+a <- cXY*sdY/sdX   #Calculate the slope
+result <- data.frame(sdX = sdX, sdY = sdY, cXY = cXY, a = a)  #Put all the results into a data frame
+result
+```
+
+
+3. Write result to a file: 
+
+```{r}
+write.table(result, file = paste0(dataPath, 'result.csv'), row.names = F)
+```
+
+
+Answer to the question: 
+How standard deviations of X and Y affect slope a of the model: 
+The standard deviations of X and Y have to both increase or decrease the same proportion in order to get the same result of slope a. For example, both sdX and sdY could double at the same time or both decrease 50%, which leads to the same amount of slope a. 
+
+
+
+Analyze Trajectories of Multiple Coin Tossing Experiment
+1. Convergence of probability of tail to 0.5
+```{r}
+set.seed(12345)   #Set seed for randomness and producibility
+
+nFlips <- 100000   # Set the number of flips to 100000
+```
+2. Simulate the flips and Calculate the corresponding trajectory of frequencies
+```{r}
+Flips <- sample(0:1, nFlips, repl = T) #Simulate the flips i.e. sequence of 100,000 zeros("Heads") or ones("Tails") 
+Trajectory <- cumsum(Flips) #Calculate trajectory of flips in the long run
+freq <- Trajectory/(1:nFlips) #Calculate trajectory of frequencies of 1(Tails)
+
+```
+3. Plot the distribution
+```{r}
+plot(1:length(freq), freq, ylim = c(0.4,1), type = "l", ylab = "Frequency", xlab = "Sample Length")
+lines(c(0,nFlips), c(0.5,0.5))
+```
+From the total 100000 flips cumulative frequency distribution graph we could see that at first the frequency is over 0.5, but it decreases to 0.5 after the sample length arrives around 6000, but in the long run, the corresponding trajectory of frequencies of tails is 0.5. It is random experiment since the outcome is predictable in the long run. 
+
+```{r}
+plot(1:4000,freq[1:4000], ylim = c(0.4,1), type = "l", ylab = "Frequency", xlab = "Sample Length")
+lines(c(0,4000), c(0.5,0.5))
+```
+From the first 4000 flips cumulative frequency distribution graph we could see that the frequency fluctuate a lot beyong and under 0.5 in around the first 200 flips, and it starts to decrease from 0.6 and becomes closer to 0.5 as sample length increases.   
+
+
+2. Check your intuition about random walks
+2.1 One trajectory
+```{r}
+nFlips <- 1000000  # Set the number of flips to 1000000
+set.seed(12345)    #set seed for randomness and producibility
+Flips <- (rbinom(nFlips, 1, 0.5) - 0.5) * 2  #Simulate the flips i.e. sequence of 1,000,000 positive ones("Heads") or negative ones("Tails") 
+```
+Answering of the question: 
+As for the degree the trajectory of wealth to deviate from zero, I thought it could be within positive and negative 500 in the oneTrajectory.     
+As for the time it stays on one side above or below zero, I think after around 20% or trails, which is around 200,000 flips, there would be little fluctuations and the distribution is around 0. 
+
+```{r}
+oneTrajectory <- cumsum(Flips) #Calculate the trajectory in 1,000,000 trials.  
+plot(oneTrajectory, ylim = c(-1000,1000), type = "l") #Plot the trajectory and the zero line to make the comparision.  
+lines(c(0,nFlips), c(0,0))
+```
+
+Comment out the set.seed()line and repeat the experiment multiple times. 
+```{r}
+nFlips<-1000000;
+#set.seed(12345)
+Flips <- (rbinom(nFlips, 1, 0.5) - 0.5) * 2
+oneTrajectory<-cumsum(Flips)
+plot(oneTrajectory, ylim=c(-1000,1000),type="l")
+lines(c(0,nFlips),c(0,0))
+```
+
+```{r}
+nFlips<-1000000;
+#set.seed(12345)
+Flips <- (rbinom(nFlips, 1, 0.5) - 0.5) * 2
+oneTrajectory<-cumsum(Flips)
+plot(oneTrajectory, ylim=c(-1000,1000),type="l")
+lines(c(0,nFlips),c(0,0))
+```
+
+The observations do not match the prior expectations. The trials have totally different results which don't show any pattern. It seems the degree the trajectory of wealth deviating from zero is within -1000 and 1000, which is larger range than I thought. And also the time for the trajectory to stay on one side above or below zero is unpredictable. Plus, the trajectory didn't stay at zero in the long run. 
+
+
+
+2.2 Multiple trajectories
+
+Expecatations before the calculations: 
+The P(|Nh???Nt|>=25) might be less than P(|Nh???Nt|<5), since in the long run, the difference between the number of Heads and the number of Tails is less and less, and my guess towards P(|Nh???Nt|>=25) is around 0.1 and P(|Nh???Nt|<5) is around 0.5. 
+
+```{r}
+nFlips<-1000000   # Set the number of flips to 1000000
+set.seed(12345)   #set seed for randomness and producibility
+Flips<-(sample(0:1,nFlips,repl=T)-0.5)*2   #Simulate the flips i.e. sequence of 1,000,000 positive ones("Heads") or negative ones("Tails") 
+
+Trajectories2000by500 <- t(apply(matrix(Flips,ncol = 500), 1, cumsum))
+#Create a matrix with 52000 groups (row) and 500 tosses (column), sum up all the rows to get the trajectories (2000 in total)
+
+dim(Trajectories2000by500)  #Check the dimenstion of the Trajectory
+
+#Calculate the probability of 2000 random walks with 500 tosses each  
+(probability.less.than.5 <- sum(abs(Trajectories2000by500[,500])<5)/2000)
+
+(probability.greater.than.25<- sum(abs(Trajectories2000by500[,500])>=25)/2000)
+
+```
+After the calculation we could see that the probability of less than 1% of N difference between the number of "Heads" and "Tails" is 0.18, and the probability that this the difference is larger than 5% of N is 0.2515. It's different than my guess, because P(|Nh???Nt|>=25) is larger than P(|Nh???Nt|<5) in the long run. 
+
+
+2.3 Time on one side
+
+Guessing:The distribution might approximate the normal distribution. The trajectory of random walk to spend on one side above zero is much likely to occur in the middle of the distribution.  
+
+```{r}
+nFlips<-1000000   # Set the number of flips to 1000000
+set.seed(12345)   #set seed for randomness and producibility
+Flips<-(sample(0:1,nFlips,repl=T)-0.5)*2   #Simulate the flips i.e. sequence of 1,000,000 positive ones("Heads") or negative ones("Tails") 
+
+timeAbove <- apply(Trajectories2000by500,1,function(z) sum(z > 0))
+hist(timeAbove)  
+```
+By telling from the histogram, we could see that the trajectory of random walk to spend on one side above zero is much more likely to occur in the beginning or in the end of the 500 coin tosses rather than in the middle. It contradicts to my original guessing. 
+
+It is called arc since law. 
+
+
+
+
+
+
